@@ -1,5 +1,4 @@
 # Twitter-like sample on Firebase
-## It's in progress now!
 
 Install dependencies first
 ```
@@ -14,6 +13,4 @@ To build react
 npm run webpack
 ```
 
-It will deployed here: https://microblog-hello-world.firebaseapp.com/
-
-*ty <3*
+It will deployed here: https://tesseris-firebase-sample.firebaseapp.com/
