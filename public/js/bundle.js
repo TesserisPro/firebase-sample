@@ -221,6 +221,10 @@ var _Profile = __webpack_require__(/*! ./Profile */ "./client/components/Profile
 
 var _Profile2 = _interopRequireDefault(_Profile);
 
+var _Users = __webpack_require__(/*! ./Users */ "./client/components/Users.jsx");
+
+var _Users2 = _interopRequireDefault(_Users);
+
 var _FirestoreService = __webpack_require__(/*! ../FirestoreService */ "./client/FirestoreService.js");
 
 var _FirestoreService2 = _interopRequireDefault(_FirestoreService);
@@ -269,21 +273,29 @@ var App = function (_Component) {
   _createClass(App, [{
     key: 'onGetUsers',
     value: function onGetUsers(users) {
-      this.setState({ users: users });
+      var _this2 = this;
+
+      if (users) {
+        this.setState({ users: users });
+      } else {
+        _FirestoreService2.default.getUsers(this.state.db).then(function (u) {
+          return _this2.setState({ users: u });
+        });
+      }
     }
   }, {
     key: 'auth',
     value: function auth(user) {
-      var _this2 = this;
+      var _this3 = this;
 
       _FirestoreService2.default.findUserByEmail(this.state.db, user.email).then(function (dbUser) {
         localStorage.setItem('user', JSON.stringify(user));
         if (!dbUser) {
-          return _FirestoreService2.default.addUser(_this2.state.db, _extends({}, user)).then(function (u) {
-            return _this2.setState({ user: u });
+          return _FirestoreService2.default.addUser(_this3.state.db, _extends({}, user)).then(function (u) {
+            return _this3.setState({ user: u });
           });
         }
-        _this2.setState({ user: dbUser });
+        _this3.setState({ user: dbUser });
         return null;
       });
     }
@@ -296,7 +308,7 @@ var App = function (_Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
+      var _this4 = this;
 
       return _react2.default.createElement(
         _reactRouterDom.BrowserRouter,
@@ -305,15 +317,15 @@ var App = function (_Component) {
           'div',
           { className: 'container' },
           _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: '/', render: function render() {
-              return _react2.default.createElement(_Blogs2.default, { users: _this3.state.users, onGetUsers: function onGetUsers(u) {
-                  return _this3.onGetUsers(u);
-                }, db: _this3.state.db, onLogout: function onLogout() {
-                  return _this3.logout();
-                }, user: _this3.state.user });
+              return _react2.default.createElement(_Blogs2.default, { users: _this4.state.users, onGetUsers: function onGetUsers(u) {
+                  return _this4.onGetUsers(u);
+                }, db: _this4.state.db, onLogout: function onLogout() {
+                  return _this4.logout();
+                }, user: _this4.state.user });
             } }),
           _react2.default.createElement(_reactRouterDom.Route, { path: '/login', render: function render() {
-              return _react2.default.createElement(_Login2.default, { user: _this3.state.user, onLogin: function onLogin(u) {
-                  return _this3.auth(u);
+              return _react2.default.createElement(_Login2.default, { user: _this4.state.user, onLogin: function onLogin(u) {
+                  return _this4.auth(u);
                 } });
             } }),
           _react2.default.createElement(_reactRouterDom.Route, {
@@ -322,17 +334,22 @@ var App = function (_Component) {
             render: function render(data) {
               return _react2.default.createElement(_Profile2.default, {
                 onGetUsers: function onGetUsers(u) {
-                  return _this3.onGetUsers(u);
+                  return _this4.onGetUsers(u);
                 },
-                users: _this3.state.users,
+                users: _this4.state.users,
                 data: data,
-                currentUser: _this3.state.user,
+                currentUser: _this4.state.user,
                 goBack: data.history.goBack,
                 email: data.match.params.email,
-                db: _this3.state.db
+                db: _this4.state.db
               });
             }
-          })
+          }),
+          this.state.user && this.state.user.isAdmin ? _react2.default.createElement(_reactRouterDom.Route, { exact: true, path: '/users', render: function render() {
+              return _react2.default.createElement(_Users2.default, { onGetUsers: function onGetUsers() {
+                  return _this4.onGetUsers();
+                }, users: _this4.state.users });
+            } }) : null
         )
       );
     }
@@ -387,7 +404,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /* global document */
+
 
 var Blogs = function (_Component) {
   _inherits(Blogs, _Component);
@@ -430,7 +448,12 @@ var Blogs = function (_Component) {
   }, {
     key: 'onReply',
     value: function onReply(postId) {
-      this.setState({ message: '@' + postId });
+      var input = document.getElementById('message-input');
+      input.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      this.setState({ message: '@' + postId + ' ' });
+      setTimeout(function () {
+        return input.focus();
+      }, 500);
     }
   }, {
     key: 'getAll',
@@ -513,7 +536,7 @@ var Blogs = function (_Component) {
               'What\'s new?'
             )
           ),
-          _react2.default.createElement('input', { placeholder: 'Your text here...', value: this.state.message, onChange: function onChange(e) {
+          _react2.default.createElement('input', { id: 'message-input', placeholder: 'Your text here...', value: this.state.message, onChange: function onChange(e) {
               return _this4.setState({ message: e.target.value });
             }, onKeyPress: function onKeyPress(e) {
               return _this4.handleEnter(e);
@@ -705,8 +728,49 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-/* global window */
+/* global window document */
 
+
+var scrollTo = function scrollTo(element) {
+  element.scrollIntoView({ behavior: 'smooth' });
+  element.classList.toggle('highlight');
+  setTimeout(function () {
+    return element.classList.toggle('highlight');
+  }, 2000);
+};
+
+var processBody = function processBody(text) {
+  var match = text.match(/@(.{20})/);
+  var element = null;
+  if (match) {
+    element = document.getElementById(match[1]);
+  }
+  if (element) {
+    var array = text.split(match[0]);
+    return array.map(function (item, i) {
+      if (i === 0) {
+        return _react2.default.createElement(
+          'span',
+          { key: item },
+          _react2.default.createElement(
+            'span',
+            { className: 'reference-to-post', onClick: function onClick() {
+                return scrollTo(element);
+              } },
+            match[0]
+          ),
+          item
+        );
+      }
+      return _react2.default.createElement(
+        'span',
+        { key: item },
+        item
+      );
+    });
+  }
+  return text;
+};
 
 var Post = function (_Component) {
   _inherits(Post, _Component);
@@ -782,12 +846,20 @@ var Post = function (_Component) {
             _react2.default.createElement(
               'div',
               { className: 'col-md-4' },
-              _react2.default.createElement('div', { className: 'photo', style: { backgroundImage: 'url(\'' + user.photoURL + '\')' } })
+              _react2.default.createElement(
+                _reactRouterDom.Link,
+                { href: '/', to: '/user/' + encodeURIComponent(user.email) },
+                _react2.default.createElement('div', { className: 'photo', style: { backgroundImage: 'url(\'' + user.photoURL + '\')' } })
+              )
             ),
             _react2.default.createElement(
               'div',
               { className: 'col-md-8' },
-              user.displayName
+              _react2.default.createElement(
+                _reactRouterDom.Link,
+                { href: '/', to: '/user/' + encodeURIComponent(user.email) },
+                user.displayName
+              )
             )
           );
         });
@@ -816,7 +888,7 @@ var Post = function (_Component) {
 
       return _react2.default.createElement(
         'div',
-        { className: 'post row' },
+        { className: 'post row', id: this.props.post.id },
         _react2.default.createElement(
           'div',
           { className: 'author col-md-3' },
@@ -843,7 +915,7 @@ var Post = function (_Component) {
           _react2.default.createElement(
             'p',
             { className: 'body' },
-            this.props.post.body
+            processBody(this.props.post.body)
           ),
           this.props.post.author === this.props.currentUser.email || this.props.currentUser.isAdmin ? _react2.default.createElement(
             'button',
@@ -852,7 +924,7 @@ var Post = function (_Component) {
               }, className: 'btn btn-link delete-post' },
             _react2.default.createElement('i', { className: 'fas fa-eraser' })
           ) : null,
-          _react2.default.createElement(
+          window.location.pathname.includes('user') ? null : _react2.default.createElement(
             'button',
             { onClick: function onClick() {
                 return _this5.props.onReply(_this5.props.post.id);
@@ -1074,6 +1146,112 @@ var Profile = function (_Component) {
 }(_react.Component);
 
 exports.default = Profile;
+
+/***/ }),
+
+/***/ "./client/components/Users.jsx":
+/*!*************************************!*\
+  !*** ./client/components/Users.jsx ***!
+  \*************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouterDom = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/es/index.js");
+
+var _FirestoreService = __webpack_require__(/*! ../FirestoreService */ "./client/FirestoreService.js");
+
+var _FirestoreService2 = _interopRequireDefault(_FirestoreService);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Users = function (_Component) {
+  _inherits(Users, _Component);
+
+  function Users(props) {
+    _classCallCheck(this, Users);
+
+    var _this = _possibleConstructorReturn(this, (Users.__proto__ || Object.getPrototypeOf(Users)).call(this, props));
+
+    props.onGetUsers();
+    return _this;
+  }
+
+  _createClass(Users, [{
+    key: 'render',
+    value: function render() {
+      var users = this.props.users;
+
+      if (users === null) {
+        return _react2.default.createElement('img', { className: 'spinner', src: '/img/loading.gif' });
+      }
+      return _react2.default.createElement(
+        'div',
+        null,
+        _react2.default.createElement(
+          'h1',
+          null,
+          'He had won the victory over himself. He loved Big Brother.'
+        ),
+        users.map(function (user) {
+          return _react2.default.createElement(
+            'div',
+            { className: 'row user', key: user.uid },
+            _react2.default.createElement(
+              'div',
+              { className: 'col-md-4' },
+              _react2.default.createElement('div', { style: { backgroundImage: 'url(\'' + (user.photoURL || 'https://png.icons8.com/ios/50/000000/login-as-user-filled.png') + '\')', margin: '0 auto' }, className: 'photo' })
+            ),
+            _react2.default.createElement(
+              'div',
+              { className: 'col-md-8' },
+              _react2.default.createElement(
+                'p',
+                { className: 'name' },
+                _react2.default.createElement(
+                  _reactRouterDom.Link,
+                  { href: '/', to: '/user/' + encodeURIComponent(user.email) },
+                  user.displayName
+                )
+              ),
+              _react2.default.createElement(
+                'p',
+                { className: 'email' },
+                _react2.default.createElement(
+                  'a',
+                  { href: 'mailto:' + user.email },
+                  user.email
+                )
+              )
+            )
+          );
+        })
+      );
+    }
+  }]);
+
+  return Users;
+}(_react.Component);
+
+exports.default = Users;
 
 /***/ }),
 

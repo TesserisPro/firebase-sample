@@ -1,8 +1,37 @@
 
-/* global window */
+/* global window document */
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import FirestoreService from '../FirestoreService';
+
+const scrollTo = (element) => {
+  element.scrollIntoView({ behavior: 'smooth' });
+  element.classList.toggle('highlight');
+  setTimeout(() => element.classList.toggle('highlight'), 2000);
+};
+
+const processBody = (text) => {
+  const match = text.match(/@(.{20})/);
+  let element = null;
+  if (match) {
+    element = document.getElementById(match[1]);
+  }
+  if (element) {
+    const array = text.split(match[0]);
+    return array.map((item, i) => {
+      if (i === 0) {
+        return (
+          <span key={item}>
+            <span className="reference-to-post" onClick={() => scrollTo(element)}>{match[0]}</span>
+            {item}
+          </span>
+        );
+      }
+      return <span key={item}>{item}</span>;
+    });
+  }
+  return text;
+};
 
 class Post extends Component {
   constructor(props) {
@@ -47,9 +76,13 @@ class Post extends Component {
         return (
           <li className="row" key={user.email}>
             <div className="col-md-4">
-              <div className="photo" style={{ backgroundImage: `url('${user.photoURL}')` }} />
+              <Link href="/" to={`/user/${encodeURIComponent(user.email)}`}>
+                <div className="photo" style={{ backgroundImage: `url('${user.photoURL}')` }} />
+              </Link>
             </div>
-            <div className="col-md-8">{user.displayName}</div>
+            <div className="col-md-8">
+              <Link href="/" to={`/user/${encodeURIComponent(user.email)}`}>{user.displayName}</Link>
+            </div>
           </li>
         );
       });
@@ -68,7 +101,7 @@ class Post extends Component {
   }
   render() {
     return (
-      <div className="post row">
+      <div className="post row" id={this.props.post.id}>
         <div className="author col-md-3">
           {window.location.pathname.includes('user') ? (
             <span>
@@ -84,13 +117,13 @@ class Post extends Component {
         </div>
         <div className="text col-md-9">
           <p className="date">{this.props.post.timeStamp.toDate().toLocaleString()}</p>
-          <p className="body">{this.props.post.body}</p>
+          <p className="body">{processBody(this.props.post.body)}</p>
           {this.props.post.author === this.props.currentUser.email
             || this.props.currentUser.isAdmin ?
               <button onClick={() => this.deletePost(this.props.post.id)} className="btn btn-link delete-post">
                 <i className="fas fa-eraser" />
               </button> : null}
-          <button onClick={() => this.props.onReply(this.props.post.id)} className="btn btn-link reply-to-post"><i className="fas fa-reply" /></button>
+          {window.location.pathname.includes('user') ? null : <button onClick={() => this.props.onReply(this.props.post.id)} className="btn btn-link reply-to-post"><i className="fas fa-reply" /></button>}
           <div className="buttons">
             <button onClick={() => this.like()} className="btn btn-link like">{this.calculateLikes()} {this.getLikeIcon()}</button>
             {this.calculateLikes() ? (
@@ -119,7 +152,7 @@ class Post extends Component {
               />
             ))}
           </div>
-          )
+        )
         }
       </div>);
   }

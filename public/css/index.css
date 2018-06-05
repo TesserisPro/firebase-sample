@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto&subset=cyrillic');
 html {
   height: 100%;
+  width: 100%;
 }
 
 body {
@@ -98,10 +99,12 @@ a:hover {
   border: none;
 }
 
-.post {
+.post,
+.user {
   background: #fff;
   padding: 10px 0;
   margin-bottom: 10px;
+  transition: background-color .5s linear;
 }
 
 .post .author,
@@ -209,10 +212,11 @@ a:hover {
   z-index: 1;
   visibility: hidden;
   opacity: 0;
-  transition: display 0s, opacity 0.5s linear;
+  transition: opacity 0.5s linear;
 }
 
-.like:hover+.users-likes {
+.like:hover+.users-likes,
+.users-likes:hover {
   visibility: visible;
   opacity: 1;
 }
@@ -238,4 +242,13 @@ a:hover {
 .like,
 .show-replies-btn {
   z-index: -1;
+}
+
+.reference-to-post {
+  color: #007bff;
+  cursor: pointer;
+}
+
+.highlight {
+  background-color: #e1e8ed;
 }
